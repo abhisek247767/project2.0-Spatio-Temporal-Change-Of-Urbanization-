@@ -1,0 +1,57 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var image = ee.Image("LANDSAT/LC08/C01/T1_SR/LC08_044034_20140318"),
+    roi = 
+    /* color: #ffc82d */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[88.44426686355257, 22.593745790210125],
+          [88.44426686355257, 22.566007818676056],
+          [88.48477894851351, 22.566007818676056],
+          [88.48477894851351, 22.593745790210125]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Calculate NDBI
+var ndbi = image.normalizedDifference(['B5', 'B6']).rename('NDBI');
+
+// Calculate NDVI
+var ndvi = image.normalizedDifference(['B5', 'B4']).rename('NDVI');
+
+// Calculate NDWI
+var ndwi = image.normalizedDifference(['B3', 'B5']).rename('NDWI');
+
+// Visualize the indices
+Map.addLayer(ndbi, {min: -1, max: 1, palette: ['blue', 'white', 'green']}, 'NDBI');
+Map.addLayer(ndvi, {min: -1, max: 1, palette: ['red', 'yellow', 'green']}, 'NDVI');
+Map.addLayer(ndwi, {min: -1, max: 1, palette: ['blue', 'white', 'cyan']}, 'NDWI');
+
+// Count the number of values greater than zero
+var ndbiCount = ndbi.gt(0).reduceRegion({
+  reducer: ee.Reducer.count(),
+  geometry: roi,
+  scale: 30,
+  maxPixels: 1e13,
+  bestEffort: true
+});
+var ndviCount = ndvi.gt(0).reduceRegion({
+  reducer: ee.Reducer.count(),
+  geometry: roi,
+  scale: 30,
+  maxPixels: 1e13,
+  bestEffort: true
+});
+var ndwiCount = ndwi.gt(0).reduceRegion({
+  reducer: ee.Reducer.count(),
+  geometry: roi,
+  scale: 30,
+  maxPixels: 1e13,
+  bestEffort: true
+});
+
+// Print the results
+print("NDBI Count:", ndbiCount.get('NDBI'));
+print("NDVI Count:", ndviCount.get('NDVI'));
+print("NDWI Count:", ndwiCount.get('NDWI'));

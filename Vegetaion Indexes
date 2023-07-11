@@ -1,0 +1,391 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var landsat = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[88.44050967472204, 22.595047398970852],
+          [88.44050967472204, 22.567151172268844],
+          [88.48462664859899, 22.567151172268844],
+          [88.48462664859899, 22.595047398970852]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// NDVI //
+
+//Making NDVI map
+//Import Landsat 8 TOA images
+//Get the image in certain date. Extract the median values
+var image = ee.Image(
+  landsat.filterBounds(geometry)
+        .filterDate('2023-02-01', '2023-03-31')
+        .sort('CLOUD_COVER', true)
+        .sort('CLOUD_COVER_LAND', true) 
+        .filter(ee.Filter.lt('CLOUD_COVER',5))
+        .median()
+);
+// 1. Clip the image in a specified boundary.
+var composite = image.clip(geometry);
+var composite = composite.toFloat()
+// Add map layers
+Map.addLayer(composite , {bands: ['B6', 'B5', 'B4']}, "composite", false);
+
+// 2. Compute the NDVI 
+var nir = image.select('B5');
+var red = image.select('B4');
+var ndvi = nir.subtract(red).divide(nir.add(red));
+var ndvi = ndvi.clip(geometry);
+// Add map layers
+Map.addLayer(ndvi, {min: 0, max: 1, palette: ['brown', 'yellow', 'green']}, 'continuous NDVI',false);
+
+// Compute the mean and stdev of NDVI
+var mean_ndvi = ndvi.reduceRegion({
+  reducer: ee.Reducer.mean(),
+  geometry: geometry,
+  scale: 30
+});
+var sd_ndvi = ndvi.reduceRegion({
+  reducer: ee.Reducer.stdDev(),
+  geometry: geometry,
+  scale: 30
+});
+print(mean_ndvi);
+print(sd_ndvi);
+
+// Making NDVI map
+// Import Landsat 8 TOA images
+// Get the image in certain date. Extract the median values
+// 3. Classify NDVI into 5 classes
+var ndvi2 = ee.Image(1)
+          .where(ndvi.gt(0.0).and(ndvi.lte(0.2)), 2)
+          .where(ndvi.gt(0.2).and(ndvi.lte(0.4)), 3)
+          .where(ndvi.gt(0.4).and(ndvi.lte(0.6)), 4)
+          .where(ndvi.gt(0.6), 5)
+var ndvi2 = ndvi2.clip(geometry);
+// Add map layers
+Map.addLayer(ndvi2, {min: 1, max: 5, palette: ['#654321','#FFA500','#FFFF00', '#00FF00', '#008000']}, 'Classified NDVI',true);
+// Add map title
+var mapTitle = ui.Panel({
+  style: {
+    position: 'top-center',
+    padding: '8px 15px'
+  }
+});
+var mapTitle2 = ui.Label({
+  value: 'Map of NDVI',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '20px',
+    margin: '0 0 3px 0',
+    padding: '0'
+    }
+});
+mapTitle.add(mapTitle2);
+Map.add(mapTitle);
+// Add map legend
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-right',
+    padding: '8px 15px'
+  }
+});
+var legend2 = ui.Label({
+  value: 'NDVI',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '16px',
+    margin: '0 0 4px 0',
+    padding: '0'
+    }
+});
+legend.add(legend2);
+// Creates the content of the legend
+var content = function(color, label) {
+      // Create the color boxes
+      var box = ui.Label({
+        style: {
+          backgroundColor: '#' + color,
+          // Set box height and width
+ 
+          padding: '8px',
+          fontSize: '6px',
+          margin: '0 0 4px 0'
+        }
+      });
+      // Create the labels
+      var labels = ui.Label({
+        value: label,
+        style: {margin: '0 0 4px 4px'}
+      });
+      return ui.Panel({
+        widgets: [box, labels],
+        layout: ui.Panel.Layout.Flow('horizontal')
+      });
+};
+//  Set legend colors
+var classcolor = ['654321','FFA500','FFFF00', '00FF00', '008000'];
+// Set legend labels
+var labelName = ['Null','Sparse','Moderate','High', 'Dense'];
+// Combine legend colou and labels
+for (var i = 0; i < 5; i++) {
+  legend.add(content(classcolor[i], labelName[i]));
+  }  
+// Add legend
+Map.add(legend);
+
+
+
+
+  // NDBI  //
+  // NDBI  //
+  // NDBI  //
+  // NDBI  //
+  // NDBI  //
+  // NDBI  //
+
+
+// Making NDBI map
+// Import Landsat 8 TOA images
+// Get the image in certain date. Extract the median values
+
+
+// var image = ee.Image(
+//   landsat.filterBounds(geometry)
+//         .filterDate('2023-02-01', '2023-03-31')
+//         .sort('CLOUD_COVER', true)
+//         .sort('CLOUD_COVER_LAND', true) 
+//         .filter(ee.Filter.lt('CLOUD_COVER',5))
+//         .median()
+// );
+// // 1. Clip the image in a specified boundary.
+// var composite = image.clip(geometry);
+// var composite = composite.toFloat()
+// // Add map layers
+// Map.addLayer(composite , {bands: ['B6', 'B5', 'B4']}, "composite", false);
+
+// // 2. Compute the NDVI 
+// var nir = image.select('B6');
+// var red = image.select('B5');
+// var ndvi = nir.subtract(red).divide(nir.add(red));
+// var ndvi = ndvi.clip(geometry);
+// // Add map layers
+// Map.addLayer(ndvi, {min: 0, max: 1, palette: ['black', 'yellow', 'green']}, 'continuous NDVI',false);
+
+// // Compute the mean and stdev of NDVI
+// var mean_ndvi = ndvi.reduceRegion({
+//   reducer: ee.Reducer.mean(),
+//   geometry: geometry,
+//   scale: 30
+// });
+// var sd_ndvi = ndvi.reduceRegion({
+//   reducer: ee.Reducer.stdDev(),
+//   geometry: geometry,
+//   scale: 30
+// });
+// print(mean_ndvi);
+// print(sd_ndvi);
+
+// // Making NDVI map
+// // Import Landsat 8 TOA images
+// // Get the image in certain date. Extract the median values
+// // 3. Classify NDVI into 5 classes
+// var ndvi2 = ee.Image(1)
+//           .where(ndvi.gt(-0.1).and(ndvi.lte(0.0)), 2)
+//           .where(ndvi.gt(0.0).and(ndvi.lte(0.2)), 3)
+//           .where(ndvi.gt(0.2).and(ndvi.lte(0.4)), 4)
+//           .where(ndvi.gt(0.4), 5)
+// var ndvi2 = ndvi2.clip(geometry);
+// // Add map layers
+// Map.addLayer(ndvi2, {min: 1, max: 5, palette: ['#000000','#ffa600','#ffdb99', '#ffffb3', '#FFFFFF']}, 'Classified NDVI',true);
+// // Add map title
+// var mapTitle = ui.Panel({
+//   style: {
+//     position: 'top-center',
+//     padding: '8px 15px'
+//   }
+// });
+// var mapTitle2 = ui.Label({
+//   value: 'Map of NDBI',
+//   style: {
+//     fontWeight: 'bold',
+//     fontSize: '20px',
+//     margin: '0 0 3px 0',
+//     padding: '0'
+//     }
+// });
+// mapTitle.add(mapTitle2);
+// Map.add(mapTitle);
+// // Add map legend
+// var legend = ui.Panel({
+//   style: {
+//     position: 'bottom-right',
+//     padding: '8px 15px'
+//   }
+// });
+// var legend2 = ui.Label({
+//   value: 'NDBI',
+//   style: {
+//     fontWeight: 'bold',
+//     fontSize: '16px',
+//     margin: '0 0 4px 0',
+//     padding: '0'
+//     }
+// });
+// legend.add(legend2);
+// // Creates the content of the legend
+// var content = function(color, label) {
+//       // Create the color boxes
+//       var box = ui.Label({
+//         style: {
+//           backgroundColor: '#' + color,
+//           // Set box height and width
+//           padding: '9px',
+//           margin: '2px 0 4px 0'
+//         }
+//       });
+//       // Create the labels
+//       var labels = ui.Label({
+//         value: label,
+//         style: {margin: '4px 0 4px 6px'}
+//       });
+//       return ui.Panel({
+//         widgets: [box, labels],
+//         layout: ui.Panel.Layout.Flow('horizontal')
+//       });
+// };
+// //  Set legend colors
+// var classcolor = ['000000','ffa600','ffdb99', 'ffffb3', 'FFFFFF'];
+// // Set legend labels
+// var labelName = ['Null','Low','Moderate','High'];
+// // Combine legend colou and labels
+// for (var i = 0; i < 5; i++) {
+//   legend.add(content(classcolor[i], labelName[i]));
+//   }  
+// // Add legend
+// Map.add(legend);
+
+
+
+  // NDWI  //
+  // NDWI  //
+  // NDWI  //
+  // NDWI  //
+  // NDWI  //
+  // NDWI  //
+
+
+
+// // Area of interest
+
+
+// // //Zoom to area of interest
+// Map.centerObject(geometry);
+// Map.addLayer(geometry);
+
+
+// //Load Sentinel-2 data
+
+// var startDate = '2022-12-01';
+// var endDate = '2022-12-31';
+
+// // Returns all the images between the start date and the end date
+// // taken on the area of interest
+// var sentinelImageCollection = ee.ImageCollection('COPERNICUS/S2')
+//                   .filterBounds(geometry)
+//                   .filterDate(startDate, endDate);
+
+// print("Number of images = ", sentinelImageCollection.size());
+
+// // We select the image with the smallest cloudy pixel percentage
+// var sentinelImage = sentinelImageCollection.sort('CLOUDY_PIXEL_PERCENTAGE',true)
+//     .first()
+//     .clip(geometry);
+
+// print("Sentinel image taken at = ", sentinelImage.date());
+
+// // Visualize using RGB
+// Map.addLayer(sentinelImage, {min: 0.0, max: 2000, bands: ['B4', 'B3', 'B2']}, 'RGB');
+
+// // Visualize using NDWI
+// var ndwi = sentinelImage.normalizedDifference(['B3', 'B8']).rename('NDWI');
+// Map.addLayer(ndwi, {palette: ['red', 'yellow', 'green', 'cyan', 'blue']}, 'NDWI');
+
+// // Calculate the area of our region of interest
+// var aoiArea = ee.Image.pixelArea().divide(1e6).reduceRegion({
+//     reducer: ee.Reducer.sum(),
+//     geometry: geometry,
+//     scale: 10,
+// }).get('area');
+// print('AOI area (km2):', aoiArea);
+
+// // Create NDWI mask
+// var ndwiThreshold = ndwi.gte(0.0);
+// var ndwiMask = ndwiThreshold.updateMask(ndwiThreshold);
+// Map.addLayer(ndwiThreshold, {palette:['black','white']}, 'NDWI Binary Mask');
+// Map.addLayer(ndwiMask, {palette:['blue']}, 'NDWI Mask');
+
+// // We can now calculate the masked areas pixel area
+// var ndwiPixelArea = ee.Image.pixelArea().addBands(ndwiMask.select('NDWI')).divide(1e6).reduceRegion({
+//     reducer: ee.Reducer.sum().group(1),
+//     geometry: geometry,
+//     scale: 10,
+//     bestEffort: true
+// });
+// // // Add map legend
+// var legend = ui.Panel({
+//   style: {
+//     position: 'bottom-right',
+//     padding: '8px 15px'
+//   }
+// });
+// var legend2 = ui.Label({
+//   value: 'NDWI',
+//   style: {
+//     fontWeight: 'bold',
+//     fontSize: '16px',
+//     margin: '0 0 4px 0',
+//     padding: '0'
+//     }
+// });
+// legend.add(legend2);
+// // Creates the content of the legend
+// var content = function(color, label) {
+//       // Create the color boxes
+//       var box = ui.Label({
+//         style: {
+//           backgroundColor: '#' + color,
+//           // Set box height and width
+//           padding: '9px',
+//           margin: '0 0 4px 0'
+//         }
+//       });
+//       // Create the labels
+//       var labels = ui.Label({
+//         value: label,
+//         style: {margin: '0 0 4px 6px'}
+//       });
+//       return ui.Panel({
+//         widgets: [box, labels],
+//         layout: ui.Panel.Layout.Flow('horizontal')
+//       });
+// };
+// //  Set legend colors
+// var classcolor = ['000000','005ce6'];
+// // Set legend labels
+// var labelName = ['Absence', 'Presence'];
+// // Combine legend colou and labels
+// for (var i = 0; i < 2; i++) {
+//   legend.add(content(classcolor[i], labelName[i]));
+//   }  
+// // Add legend
+// Map.add(legend);
+// var list = ee.List(ndwiPixelArea.get('groups'));
+// var group0 = ee.Dictionary(list.get(0));
+// var ndwiWaterArea = ee.Number(group0.get('sum')).float();
+// print("Water area (km2):", ndwiWaterArea);
+
+// var waterRatio = ndwiWaterArea.divide(aoiArea);
+// print("Water ratio from area:", waterRatio);

@@ -1,0 +1,38 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var aoi = 
+    /* color: #00ffff */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[87.95970603029016, 23.060862420660523],
+          [87.95970603029016, 22.287432278160228],
+          [88.69913741151575, 22.287432278160228],
+          [88.69913741151575, 23.060862420660523]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var dataset = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')
+  .filter(ee.Filter.date('2022-06-01', '2022-08-30'))
+  .filterBounds(aoi)
+  .select(['avg_rad', 'cf_cvg'])
+  .first()
+  .clip(aoi);
+
+ var cloudThreshold = 2;
+ 
+
+var viirsAvgRad = dataset.select('avg_rad')
+                                  .reduce(ee.Reducer.mean());
+// Display the masked VIIRS image
+Map.addLayer(viirsAvgRad, {min:0, max:10}, 'VIIRS NTL Masked');
+
+// Export the image, specifying scale and region.
+Export.image.toDrive({
+  image: viirsAvgRad,
+  description: 'VIIRS',
+  scale: 10,
+  region: aoi,
+  maxPixels: 13999824305
+});
